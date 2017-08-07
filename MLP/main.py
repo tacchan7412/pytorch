@@ -21,6 +21,7 @@ class Net(nn.Module):
         return x
 
     def flatten(self, x):
+        # torch.Size([1, 28, 28]) -> torch.Size([1, 784])
         size = x.size()[1:]
         num_features = 1
         for s in size:
@@ -31,8 +32,9 @@ net = Net()
 
 # loading MNIST datasets
 transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Normalize((0.1307,), (0.3081,))])
+    [transforms.ToTensor(), # PILImage to Tensor
+     transforms.Normalize((0.1307,), (0.3081,)) # Normalization
+     ])
 
 trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True)
