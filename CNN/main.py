@@ -11,19 +11,30 @@ import torch.optim as optim
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
+        # (in_channel: 1, out_channel: 20, kernel_size: 5)
         self.conv1 = nn.Conv2d(1, 20, 5)
+        # (window width: 2, window height: 2)
         self.pool1 = nn.MaxPool2d(2, 2)
+        # (in_channel: 20, out_channel: 50, kernel_size: 5)
         self.conv2 = nn.Conv2d(20, 50, 5)
+        # (window width: 2, window height: 2)
         self.pool2 = nn.MaxPool2d(2, 2)
-        self.dense = nn.Linear(4*4*50, 10)
+        self.dense = nn.Linear(50*4*4, 10)
 
     def forward(self, x):
+        # (, 1, 28, 28)
         x = F.relu(self.conv1(x))
+        # (, 20, 24, 24)
         x = self.pool1(x)
+        # (, 20, 12, 12)
         x = F.relu(self.conv2(x))
+        # (, 50, 8, 8)
         x = self.pool2(x)
+        # (, 50, 4, 4)
         x = self.flatten(x)
+        # (, 800)
         x = F.softmax(self.dense(x))
+        # (, 10)
         return x
 
     def flatten(self, x):
