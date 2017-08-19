@@ -2,8 +2,19 @@
 
 pytorch implementations of several deep learning algorithms by tacchan7412
 
-## MLP (多層パーセプトロン)
+##DONE
+
+### MLP (多層パーセプトロン)
 dataset: MNIST
 
-## CNN
+### CNN
 dataset: MNIST
+
+### AE (AutoEncoder)
+dataset: MNIST
+
+## NOT DONE
+
+### DAE (Deep AutoEncoder)
+
+### VAE (Variational AutoEncoder)
