@@ -11,14 +11,22 @@ import torch.optim as optim
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(784,50)
-        self.fc2 = nn.Linear(50,784)
+        self.W = nn.Linear(784,200)
+        self.dropout = nn.Dropout(p=0.1)
+        self.bias = nn.Parameter(torch.Tensor(784))
 
     def forward(self, x):
         x = self.flatten(x)
-        x = F.sigmoid(self.fc1(x))
-        x = F.sigmoid(self.fc2(x))
-        return x
+        x = self.dropout(x)
+        x = self.encode(x)
+        return self.decode(x)
+
+    def encode(self, x):
+        return F.sigmoid(self.W(x))
+
+    def decode(self, x):
+        tW = self.W.weight.transpose(0, 1)
+        return F.sigmoid(F.linear(x, tW, self.bias))
 
     def flatten(self, x):
         # torch.Size([1, 28, 28]) -> torch.Size([1, 784])
@@ -47,7 +55,7 @@ criterion = nn.MSELoss()
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
 # Train
-n_epochs = 200
+n_epochs = 20
 for epoch in range(n_epochs):
     print('EPOCH: %d' %epoch)
     running_loss = 0.0
