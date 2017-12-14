@@ -52,7 +52,10 @@ class generator(nn.Module):
         ) 
 
     def forward(self, input):
-        return self.main(input)
+        if isinstace(input.data, torch.cuda.FloatTensor) and util.ngpu > 1:
+            return nn.parallel.data_parallel(self.main, input, range(util.ngpu))
+        else:
+            return self.main(input)
 
 # Discriminator
 class discriminator(nn.Module):
@@ -80,14 +83,16 @@ class discriminator(nn.Module):
         )
 
     def forward(self, input):
-        return self.main(input).view(-1, 1).squeeze(1)
+        if isinstance(input.data, torch.cuda.FloatTensor) and self.ngpu > 1:
+            return nn.parallel.data_parallel(self.main, input, range(self.ngpu)).view(-1, 1).squeeze(1)
+        else:
+            return self.main(input).view(-1, 1).squeeze(1)
 
 # weight initialization for Conv2d and ConvTranspose2d
 # mean: 0.0, std: 0.02
 def init_weight(m):
    if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
        m.weight.data.normal_(util.mean, util.std)
-
 
 # network initialization
 netG = generator()
@@ -105,6 +110,13 @@ optimizerD = optim.Adam(netD.parameters(), lr=util.lr, betas=(util.beta, 0.999))
 
 # fixed z
 fixed_z = torch.randn((5 * 5, 100)).view(-1, 100, 1, 1)
+
+if util.cuda:
+    netG.cuda()
+    netD.cuda()
+    criterion.cuda()
+    fixed_z = fixed_z.cuda()
+
 fixed_z = Variable(fixed_z)
 
 # saving folder for image generated from fixed_z 
@@ -124,6 +136,11 @@ for epoch in range(util.train_epoch):
         real_label = torch.ones(mini_batch)
         fake_label = torch.zeros(mini_batch)
 
+        if util.cuda:
+            inputs = inputs.cuda()
+            real_label = real_label.cuda()
+            fake_label = fake_label.cuda()
+
         inputs, real_label, fake_label = Variable(inputs), Variable(real_label), Variable(fake_label)
 
         # train with real image        
@@ -132,6 +149,8 @@ for epoch in range(util.train_epoch):
 
         # train with fake image
         z = torch.randn((mini_batch, 100)).view(-1, 100, 1, 1)
+        if util.cuda:
+            z = z.cuda()
         z = Variable(z)
         outputs = netD(netG(z))
         D_fake_loss = criterion(outputs, fake_label)
@@ -146,6 +165,8 @@ for epoch in range(util.train_epoch):
         netG.zero_grad()
 
         z = torch.randn((mini_batch, 100)).view(-1, 100, 1, 1)
+        if util.cuda:
+            z = z.cuda()
         z = Variable(z)
 
         outputs = netD(netG(z))
