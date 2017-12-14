@@ -52,7 +52,7 @@ class generator(nn.Module):
         ) 
 
     def forward(self, input):
-        if isinstace(input.data, torch.cuda.FloatTensor) and util.ngpu > 1:
+        if isinstance(input.data, torch.cuda.FloatTensor) and util.ngpu > 1:
             return nn.parallel.data_parallel(self.main, input, range(util.ngpu))
         else:
             return self.main(input)
@@ -83,8 +83,8 @@ class discriminator(nn.Module):
         )
 
     def forward(self, input):
-        if isinstance(input.data, torch.cuda.FloatTensor) and self.ngpu > 1:
-            return nn.parallel.data_parallel(self.main, input, range(self.ngpu)).view(-1, 1).squeeze(1)
+        if isinstance(input.data, torch.cuda.FloatTensor) and util.ngpu > 1:
+            return nn.parallel.data_parallel(self.main, input, range(util.ngpu)).view(-1, 1).squeeze(1)
         else:
             return self.main(input).view(-1, 1).squeeze(1)
 
